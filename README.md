@@ -1,4 +1,4 @@
-# Clustering water samples based on main ions and cations
+# Clustering water samples based on main anions and cations
 
 This project provides the basis in order to perform an efficient and reproducable clustering on water samples. It has been created in the framework of the [MedSal project](https://medsal.eu/).
 
