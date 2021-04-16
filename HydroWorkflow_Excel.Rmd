@@ -1,0 +1,1147 @@
+---
+title: "Medsal Project: Analysis of hydrochemical data for the study site Samos"
+author: Dimistris Bassukas 
+date: 4/2021
+geometry: margin=2cm
+documentclass: "report"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+```{r Install packages, eval=FALSE, include=FALSE}
+#Install packages ( only needed when using the script for the first time!)
+install.packages(c("readxl","PeriodicTable","knitr","ggplot2", "ggmap","plotly","factoextra","tibble","cluster","purr","tidyr", "magrittr", "scales","reshape2","directlabels", "dplyr", "hydrogeo", "ggrepel","readxl","ggplot2", "knitr","PeriodicTable","RMySQL","devtools", "latex2exp","devtools", "ggforce","kableExtra"))
+
+devtools::install_github("kassambara/ggpubr")
+devtools::install_github("paleolimbot/tidyphreeqc")
+```
+
+```{r Working directory, include=FALSE}
+# By default the working directory is set below to be the folder containing the RMarkdown file
+wd = getwd()
+setwd(wd)
+```
+
+```{r Provide the instructions to run the script, message=FALSE, warning=FALSE, include=FALSE}
+
+#▐▓█▀▀▀▀▀▀▀▀▀█▓▌░▄▄▄▄▄░
+#▐▓█░░▀░░▀▄░░█▓▌░█▄▄▄█░
+#▐▓█░░▄░░▄▀░░█▓▌░█▄▄▄█░
+#▐▓█▄▄▄▄▄▄▄▄▄█▓▌░█████░
+#░░░░▄▄███▄▄░░░░░█████░
+
+
+#1) Provide the path to the .xlsx file containing your analyses  _________________________________________#                                 
+library(readxl)
+water_analysis <-
+    read_excel("Hydroworkflow_Input/Application_Samos_water_analyses_with_WK024_25.xlsx")
+
+#2)Clustering
+
+#Choose the similarity measure to be used 
+#( "manhattan", "euclidean", "maximum", "canberra", "binary", "minkowski")
+sim_meas = "manhattan" 
+# Choose the agglomeration method 
+#("complete", "average", "single", "ward.D")
+agg_method =  "ward.D" 
+# Choose the number of clusters for the dendrogram 
+numberofclusters = 4
+
+#3)Specify map corners
+map_cor = c(
+  top =    37.789129,
+  left =   26.798606,
+  bottom =   37.655869,
+  right = 27.037566
+  )
+
+#___________________________________________YOU CAN NOW KNIT THE DOCUMENT_________# 
+```
+
+# 1.Data quality assessment
+
+## 1.1. Data overview
+
+```{r View your original data, echo=FALSE, message=FALSE, warning=FALSE}
+library(knitr)
+kable(water_analysis[1:11], align = 'c', caption = 'The studied water analyses ($mg/L$)')
+```
+
+## 1.2. Charge balance error
+
+An assessment of the hydrogeochemical data at hand is crucial for the quality of the following modeling procedure and therefore constitutes the first processing stage. A routine validation is checking the **electroneutrality** of the water. Aqueous solutions must be electrically neutral hence the total sum of all the positive charges (cations) must equal the total sum of all negative charges (anions):
+
+$$ \sum eq_{c a t i o n s}=\sum eq_{a n i o n s}$$
+
+$$
+\sum m_c * z_c =\ \sum m_a*|z_a|
+$$
+
+Where $eq_{ions}$ is in $meq/L$, therefore the original data was transformed from accordingly from $mg/L$ to $meq/L$.
+
+```{r Transform your data from mg/l to meq/l, echo=TRUE, message=FALSE, warning=FALSE}
+library("PeriodicTable")
+
+#Basic ions
+Na_meq = c(water_analysis$Na / mass('Na') * 1)
+K_meq = c(water_analysis$K / mass('K') * 1)
+Mg_meq = c(water_analysis$Mg / mass('Mg') * 2)
+Ca_meq = c(water_analysis$Ca / mass('Ca') * 2)
+Cl_meq = c(water_analysis$Cl / mass('Cl') * 1)
+SO4_meq = c(water_analysis$SO4 / (mass("S") + 4 * mass("O")) * 2)
+HCO3_meq = c(water_analysis$HCO3 / (mass("H") + mass("C") + 3 * mass("O")) *1)
+
+# Further ions 
+if("NO3" %in% colnames(water_analysis)) {
+  NO3_meq = c(water_analysis$NO3 / (mass("N") + 3 * mass("O")) * 1)
+}
+
+if("Br" %in% colnames(water_analysis)) {
+  Br_meq = c(water_analysis$Br / (mass("Br")) * 1)
+}
+
+if("CO3" %in% colnames(water_analysis)) {
+  CO3_meq = c(water_analysis$CO3 / (mass("C") + 3 * mass("O")) * 2)
+}
+```
+
+The use of the **Charge Balance Error (CBE)** quantifies the balance of the analysis. Positive CBE values indicate more anions than cations and vice versa. $$CBE = \frac{\sum anions -\sum cations}{\sum anions+\sum cations} * 100$$
+
+Charge Balance Error was calculated for every sample as presented in Table 2.
+
+```{r Charge Balance Error calculation, echo=TRUE, message=FALSE, warning=FALSE}
+
+
+# Provide the anions and cations to be incooroporated in the Charge Balance Error calculation
+cations = Na_meq + K_meq + Mg_meq + Ca_meq
+anions = Cl_meq + SO4_meq + HCO3_meq
+
+if(exists("NO3_meq")){
+  anions = anions + NO3_meq
+}
+
+if(exists("Br_meq")){
+  anions = anions + Br_meq
+}
+
+if(exists("CO3_meq")){
+  anions = anions + CO3_meq
+}
+
+# Calculate the charge balance error
+C_B_E = (cations - anions) / (cations + anions) * 100
+
+# Add a column with the CBE to the dataset
+analysis_CBE <- water_analysis
+analysis_CBE$CBE = C_B_E
+
+# Please make sure that the sample name is the first column
+library(knitr)
+kable(analysis_CBE[, c(1, ncol(analysis_CBE))], align = 'c', 
+      caption = 'Water samples and their respective CBE(%)')
+```
+
+Systematic errors in the sampling procedure and the overall number of suitable or not samples, were evaluated by plotting the distribution of the CBE error.
+
+```{r Distribution of the CBE error,fig.cap="Distribution of CBE", echo=TRUE, fig.height=2, fig.width=8, message=FALSE, warning=FALSE}
+
+library(ggplot2)
+
+plot1_density = ggplot(analysis_CBE, aes(CBE)) +
+  geom_density(color = "darkblue", fill = "lightblue") +
+  geom_vline(
+    aes(xintercept = 5),
+    size = 1,
+    color = "red",
+linetype = "dashed"
+) +
+  geom_vline(
+aes(xintercept = -5),
+ size = 1,
+ color = "red",
+linetype = "dashed"
+) +
+  theme_light() +
+  xlab("CBE %") +
+  ylab("Density")
+
+plot1_density 
+```
+
+Samples with CBE higher than ±5% are presented in Table 3
+
+```{r View samples in which |CBE| exceeds 5%, echo=TRUE}
+Large_imbalance=analysis_CBE[abs(analysis_CBE$CBE) > 5,]
+
+library(knitr)
+kable(Large_imbalance[1],align = 'c',  caption = 'Samples that exceed the 5% CBE')
+```
+
+Samples with a charge imbalance up to ±5%, as indicated by the CBE, are accepted otherwise the sample is dismissed from the dataset and any further analysis.
+
+```{r Exclude samples with high charge imbalance, eval=FALSE, include=FALSE}
+water_analysis = analysis_CBE[abs(analysis_CBE$CBE) < 5,]
+```
+
+The filtered dataset is retransformed from $mg/L$ to $meq/L$
+
+```{r Recalculate meq/L for the filtered dataset, echo=TRUE, message=FALSE, warning=FALSE}
+library("PeriodicTable")
+
+### Please notice that this chunk should be identical with the {r Transform your data from mg/l to meq/l} 
+
+#Basic ions
+Na_meq = c(water_analysis$Na / mass('Na') * 1)
+K_meq = c(water_analysis$K / mass('K') * 1)
+Mg_meq = c(water_analysis$Mg / mass('Mg') * 2)
+Ca_meq = c(water_analysis$Ca / mass('Ca') * 2)
+Cl_meq = c(water_analysis$Cl / mass('Cl') * 1)
+SO4_meq = c(water_analysis$SO4 / (mass("S") + 4 * mass("O")) * 2)
+HCO3_meq = c(water_analysis$HCO3 / (mass("H") + mass("C") + 3 * mass("O")) *1)
+
+# Further ions 
+
+if("NO3" %in% colnames(water_analysis)) {
+  NO3_meq = c(water_analysis$NO3 / (mass("N") + 3 * mass("O")) * 1)
+}
+
+
+if("Br" %in% colnames(water_analysis)) {
+  Br_meq = c(water_analysis$Br / (mass("Br")) * 1)
+}
+
+if("CO3" %in% colnames(water_analysis)) {
+  CO3_meq = c(water_analysis$CO3 / (mass("C") + 3 * mass("O")) * 2)
+}
+
+```
+
+The amount of TDS ( Total dissolved ions) in the water samples was computed and added to the dataset.
+
+```{r Theoretical computation of TDS, echo=TRUE}
+
+water_analysis <- transform(water_analysis, TDS = (Na + K + Mg + Ca + Cl + HCO3+ SO4))
+
+if("NO3" %in% colnames(water_analysis)) {
+  water_analysis$TDS = water_analysis$TDS + water_analysis$NO3
+}
+
+if("Br" %in% colnames(water_analysis)) {
+  water_analysis$TDS = water_analysis$TDS + water_analysis$Br
+}
+
+if("CO3" %in% colnames(water_analysis)) {
+   water_analysis$TDS = water_analysis$TDS + water_analysis$CO3
+}
+```
+
+```{r First Housekeeping, include=FALSE}
+
+# Housekeeping! 
+rm(list=c("anions","cations","analysis_CBE","C_B_E","analysis_CBE","Large_imbalance","plot1_density"))
+```
+
+------------------------------------------------------------------------
+
+# 2. Cluster analysis
+
+Scope of the cluster analysis is the partition of water samples into clusters (groups) based on similarity, without prior knowledge of groupings between them. Preparation of the dataset to be clustered include:
+
+## 2.1. Data preparation
+
+log-transforming highly skewed variables and standardization to 0 mean and 1 sd ( z-scoring).
+
+```{r Create data subset to perform cluster analysis, echo=TRUE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(magrittr)
+library(knitr)
+library(tidyr)
+library(purrr)
+
+# Choose the ions or variables to be used in the cluster analysis 
+# from the water_analysis dataframe
+
+water_analysis_clust = water_analysis %>% 
+  select(Sample,Cl,HCO3,SO4,Ca,Mg,Na,K)
+
+if("NO3" %in% colnames(water_analysis)) {
+  water_analysis_clust$NO3 = water_analysis$NO3
+}
+
+
+if("Br" %in% colnames(water_analysis)) {
+  water_analysis_clust$Br = water_analysis$Br
+}
+
+
+if("CO3" %in% colnames(water_analysis)) {
+  water_analysis_clust$CO3 = water_analysis$CO3
+}
+```
+
+The skewness of the samples was examined by plotting the distribution of the ions.
+
+```{r Examine the skewness, echo=TRUE, fig.height=4, fig.width=8, fig.cap= "Distribution of ions prior to normalization"}
+library(dplyr)
+library(ggplot2)
+library(tibble)
+
+### Look at the distribution of the ions
+water_analysis_clust %>% 
+  keep(is.numeric) %>% 
+  gather() %>%
+  ggplot(aes(value)) +                     
+    facet_wrap(~ key, scales = "free") +   
+    geom_density(color="darkblue", fill="lightblue") + theme_light()+ xlab("")
+```
+
+Departure from a more "Normal" distribution was mitigated by applying a $log_{10}$ transformation to all ions as shown in the plot below. The relative differences and ratios are not altered whilst the range of numeric values decreases.
+
+```{r log10 transform, echo=TRUE, fig.height=4, fig.width=8, fig.cap= "Distribution of ions after $log_{10}$ transformation"}
+
+library(dplyr)
+library(ggplot2)
+library(tibble)
+
+# We assign the samples' names column to the data frame's row names so as to maintain them in the following scaling
+water_analysis_clust = water_analysis_clust%>% 
+  remove_rownames %>% 
+  column_to_rownames(var="Sample")
+
+water_analysis_clust <- log10(water_analysis_clust)
+
+
+water_analysis_clust %>% 
+  keep(is.numeric) %>% 
+  gather() %>%
+  ggplot(aes(value)) +                     
+    facet_wrap(~ key, scales = "free") +   
+    geom_density(color="darkblue", fill="lightblue") + theme_light()+ xlab("")
+
+```
+
+To ensure a common scale for all variables, the final data preparation step included the scaling of the samples substituting each value with a respective Z-score. After scaling, the mean is set to 0 and the distance from the mean is in units of 1 standard deviation:
+
+$$
+z = \frac{x - \bar{x}}{\sigma}
+$$
+
+The resulting z-scores, to be used in the following cluster analysis are presented in the table below:
+
+```{r z-scoring, echo=TRUE, message=FALSE, warning=FALSE}
+library(cluster)
+library(dplyr)
+library(magrittr)
+library(knitr)
+library(tidyr)
+library(purrr)
+library(tibble)
+
+# Actual scaling using the scale() function
+water_analysis_clust_scaled <- scale(water_analysis_clust)
+
+# Print the scaled data
+kable(water_analysis_clust_scaled,align = 'c',  caption = 'Scaled data Z-scores')
+```
+
+## 2.2.Clustering
+
+After having scaled the dataset we can now calculate the dissimilarity matrix (the distance $\delta_{i,j}$ between each pair of observations). Here the **Manhattan** or **City Block Distance (CDB)** was used as a measure of similarity . Other similarity measures can be used substituting the `method =` parameter with `“euclidean”, “maximum”, “canberra”, “binary”, “minkowski”` respectively. In this matrix, the value represent the distance between objects. The values on the diagonal of the matrix represent the distance between objects and themselves (which are zero). We can perform agglomerative HC with `hclust` specify the agglomeration method to be used (i.e. "complete", "average", "single", "ward.D"). We can then plot the dendrogram.
+
+```{r HCA, echo=TRUE, fig.cap= " Cluster Dendrogram (ward.D agglomeration method)"}
+
+# Measure of similarity (method = " ")
+d <- dist(water_analysis_clust_scaled, method = sim_meas)
+
+# Agglomeration method = " " 
+hc1 <- hclust(d, method = agg_method )
+
+plot(hc1, cex = 0.6, hang = -1)
+```
+
+For determining an optimal number of clusters the results of the Elbow method are presented below:
+
+```{r cluster optimal number, echo=TRUE, fig.height=3, fig.width=8, fig.cap=""}
+
+library(factoextra)
+
+par(mfrow=c(1,3))
+
+fviz_nbclust(water_analysis_clust_scaled, FUN = hcut, method = "wss")
+```
+
+## 3.3.1. Dendrogram based on chosen number of clusters
+
+Based on the number of clusters chosen the previous dendrogram is respectively colored to portray the clustering:
+
+```{r cut the dendrogram, echo=TRUE, fig.height=8, fig.cap=" Dendrogram with the defined number of clusters indicated by the respective colors"}
+
+library(factoextra)
+
+# The number of clusters has been assigned in the first section of instructions.  
+# If you want to change the number of clusters activate the assignment below by deleting the "#" below
+# numberofclusters = 1 
+
+dendro= fviz_dend(hc1, cex = 0.5, k = numberofclusters, horiz = T,main = "Samos dendrogram (Ward's method)",
+          xlab = "", ylab = "Distance", color_labels_by_k = T, palette =  "aaas")
+
+ggsave(file="Dendrogram.svg", dendro, width=10, height=8)
+
+dendro
+```
+
+Each sample's respective cluster value is added as a column in `water_analysis` dataframe.
+
+```{r add clusters to data, echo=TRUE}
+
+clusterCut <- cutree(hc1,numberofclusters) 
+
+water_analysis= cbind(water_analysis, Cluster = clusterCut )
+```
+
+## 3.3.2. Study area map with the respective clusters
+
+The spatial context of the clustering process was visualized:
+
+```{r create map, echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE, fig.cap=" Map of the study area with the respective clusters as calculated in the previous section"}
+library(ggmap)
+library(ggrepel)
+
+map_data = data.frame(SAMPLES = water_analysis$Sample,
+                      LON = water_analysis$Longitude,
+                      LAT = water_analysis$Latitude,
+                      CLUSTERS = water_analysis$Cluster)
+map_data$CLUSTERS = factor(map_data$CLUSTERS)
+
+myMap <- get_stamenmap(bbox = map_cor,
+                       maptype = "terrain", 
+                       crop = TRUE,
+                       zoom = 12)
+
+ map=ggmap(myMap, darken=c(0.05, "white"), extent="device") + 
+  geom_point(aes(x=LON, y=LAT, color=CLUSTERS), data=map_data, size= 3, alpha = 0.8)+
+  geom_text_repel(data = map_data, aes(x = LON, y = LAT, label = SAMPLES), size = 3)+
+  theme(legend.position="bottom")
+ 
+ map
+ 
+ ggsave(file="Cluster_map.png", map)
+```
+
+```{r Export water_analysis with clusters for GIS, include=FALSE}
+
+hydroExport = "/HydroWorkflow_export.csv"
+
+gispath = c(wd,hydroExport)
+write.csv( water_analysis,  paste(gispath, collapse = ""), row.names = FALSE)
+```
+
+```{r second Housekeeping, include=FALSE}
+rm(list=c("res.hc","hc1","water_analysis_clust","water_analysis_clust_scaled","map_data","myMap","numberofclusters","clusterCut","d"))
+```
+
+# 3. Data visualization
+
+## 3.1. Piper plot
+
+```{r Functions for piper plot, include=FALSE}
+
+library(ggplot2)
+
+# this function will transform the data into 100%
+transform_piper_data <- function(Mg, Ca, Cl,SO4, name=NULL){
+  if(is.null(name)){
+    name = rep(1:length(Mg),3)
+  } else {
+    name = rep(name,3)
+  }
+  y1 <- Mg * 0.86603
+  x1 <- 100*(1-(Ca/100) - (Mg/200))
+  y2 <- SO4 * 0.86603
+  x2 <-120+(100*Cl/100 + 0.5 * 100*SO4/100)
+  new_point <- function(x1, x2, y1, y2, grad=1.73206){
+    b1 <- y1-(grad*x1)
+    b2 <- y2-(-grad*x2)
+    M <- matrix(c(grad, -grad, -1,-1), ncol=2)
+    intercepts <- as.matrix(c(b1,b2))
+    t_mat <- -solve(M) %*% intercepts
+    data.frame(x=t_mat[1,1], y=t_mat[2,1])
+  }
+  np_list <- lapply(1:length(x1), function(i) new_point(x1[i], x2[i], y1[i], y2[i]))
+  npoints <- do.call("rbind",np_list)
+  data.frame(observation=name,x=c(x1, x2, npoints$x), y=c(y=y1, y2, npoints$y))
+}
+
+### This is the actual function to call the piper plot
+ 
+ggplot_piper <- function() {
+  library(ggplot2)
+  grid1p1 <<- data.frame(x1 = c(20, 40, 60, 80),
+                         x2 = c(10, 20, 30, 40),
+                         y1 = c(0, 0, 0, 0),
+                         y2 = c(17.3206, 34.6412, 51.9618, 69.2824)) ## FIXME: how are these numbers generated???
+  grid1p2 <<- data.frame(x1 = c(20, 40, 60, 80),
+                         x2 = c(60, 70, 80, 90),
+                         y1 = c(0, 0, 0, 0),
+                         y2 = c(69.2824, 51.9618, 34.6412, 17.3206)) ## FIXME: how are these numbers generated???
+  grid1p3 <<- data.frame(x1 = c(10, 20, 30, 40), 
+                         x2 = c(90, 80, 70, 60),
+                         y1 = c(17.3206, 34.6412, 51.9618, 69.2824), ## FIXME: how are these numbers generated???
+                         y2 = c(17.3206, 34.6412, 51.9618, 69.2824)) ## FIXME: how are these numbers generated???
+  grid2p1 <<- grid1p1
+  grid2p1$x1 <- grid2p1$x1 + 120
+  grid2p1$x2 <- grid2p1$x2 + 120
+  grid2p2 <<- grid1p2
+  grid2p2$x1 <- grid2p2$x1 + 120
+  grid2p2$x2 <- grid2p2$x2 + 120
+  grid2p3 <<- grid1p3
+  grid2p3$x1 <- grid2p3$x1 + 120
+  grid2p3$x2 <- grid2p3$x2 + 120
+  grid3p1 <<- data.frame(x1 = c(100, 90, 80, 70),
+                         y1 = c(34.6412, 51.9618, 69.2824, 86.603), ## FIXME: how are these numbers generated???
+                         x2 = c(150, 140, 130, 120),
+                         y2 = c(121.2442, 138.5648, 155.8854, 173.2060)) ## FIXME: how are these numbers generated???
+  grid3p2 <<- data.frame(x1 = c(70, 80, 90, 100),
+                         y1 = c(121.2442, 138.5648, 155.8854, 173.2060), ## FIXME: how are these numbers generated???
+                         x2 = c(120, 130, 140, 150),
+                         y2 = c(34.6412, 51.9618, 69.2824, 86.603)) ## FIXME: how are these numbers generated???
+  
+  label.size <- 5
+  
+  p <- ggplot() +
+    
+    ## left hand ternary plot
+    geom_segment(aes(x =  0, y =  0,     xend = 100, yend = 0)) +
+    geom_segment(aes(x =  0, y =  0,     xend =  50, yend = 86.603)) + ## FIXME: how are these numbers generated???
+    geom_segment(aes(x = 50, y = 86.603, xend = 100, yend = 0)) + ## FIXME: how are these numbers generated???
+    
+    ## right hand ternary plot
+    geom_segment(aes(x = 120, y = 0, xend = 220, yend =  0)) +
+    geom_segment(aes(x = 120, y = 0, xend = 170, yend = 86.603)) +
+    geom_segment(aes(x = 170, y = 86.603, xend = 220, yend = 0)) +
+    
+    ## Upper diamond
+    geom_segment(aes(x = 110, y = 190.5266, xend =  60, yend = 103.9236)) +
+    geom_segment(aes(x = 110, y = 190.5266, xend = 160, yend = 103.9236)) +
+    geom_segment(aes(x = 110, y =  17.3206, xend = 160, yend = 103.9236)) +
+    geom_segment(aes(x = 110, y =  17.3206, xend =  60, yend = 103.9236)) +
+    
+    ## Add grid lines to the plots
+    geom_segment(aes(x = x1, y = y1, yend = y2, xend = x2), data = grid1p1, linetype = "dashed", size = 0.25, colour = "grey50") +
+    geom_segment(aes(x = x1, y = y1, yend = y2, xend = x2), data = grid1p2, linetype = "dashed", size = 0.25, colour = "grey50") +
+    geom_segment(aes(x = x1, y = y1, yend = y2, xend = x2), data = grid1p3, linetype = "dashed", size = 0.25, colour = "grey50") +
+    geom_segment(aes(x = x1, y = y1, yend = y2, xend = x2), data = grid2p1, linetype = "dashed", size = 0.25, colour = "grey50") +
+    geom_segment(aes(x = x1, y = y1, yend = y2, xend = x2), data = grid2p2, linetype = "dashed", size = 0.25, colour = "grey50") +
+    geom_segment(aes(x = x1, y = y1, yend = y2, xend = x2), data = grid2p3, linetype = "dashed", size = 0.25, colour = "grey50") +
+    geom_segment(aes(x = x1, y = y1, yend = y2, xend = x2), data = grid3p1, linetype = "dashed", size = 0.25, colour = "grey50") +
+    geom_segment(aes(x = x1, y = y1, yend = y2, xend = x2), data = grid3p2, linetype = "dashed", size = 0.25, colour = "grey50") +
+    
+    ### Labels and grid values
+    coord_fixed(ratio = 1) +  
+    geom_text(aes(17,   50, label = "Mg^'2+'"), angle = 60, size = label.size, parse = TRUE) +  
+    geom_text(aes(82.5, 50, label = "Na^'+'~+~K^'+'"), angle = -60, size = label.size, parse = T) +
+    geom_text(aes(50,  -10, label = "Ca^'2+'"), size = label.size, parse = TRUE) +
+    geom_text(aes(170,   -10, label = "Cl^'-'"), size = label.size, parse = TRUE) +
+    geom_text(aes(205,    50, label = "SO[4]^'2-'"), angle = -60, size = label.size, parse = TRUE) +
+    geom_text(aes(137.5,  50, label = "Alkalinity~as~HCO[3]^'-'"), angle = 60, size = label.size, parse = TRUE) +
+    geom_text(aes( 72.5, 150, label = "SO[4]^'2-'~+~Cl^'-'"), angle = 60, size = label.size, parse = TRUE) +
+    geom_text(aes(147.5, 150, label = "Ca^'2+'~+~Mg^'2+'"), angle = -60, size = label.size, parse = TRUE) + 
+    
+    geom_text(aes(c(35, 25, 15, 5), grid1p2$y2, label = c(80, 60, 40, 20)), size = label.size -1, angle = 0) + # Mg axis
+    geom_text(aes(c(95, 85, 75, 65), grid1p3$y2, label = c(80, 60, 40, 20)), size = label.size -1, angle = 60, vjust = -1, hjust = 0) + # Na axis
+    geom_text(aes(c(20, 40, 60, 80), c(-5, -5, -5, -5), label = c(80, 60, 40, 20)), size = label.size -1, angle = -60, vjust = -.5) + # Ca axis
+    geom_text(aes(c(155, 145, 135, 125), grid2p2$y2, label = c(20, 40, 60, 80)), size = label.size -1, angle = -60, vjust = -1, hjust = 1) + # HCO3 axis
+    geom_text(aes(c(215, 205, 195, 185), grid2p3$y2, label = c(20, 40, 60, 80)), size = label.size -1, angle = 0) + # SO4 axis
+    geom_text(aes(c(140, 160, 180, 200), c(-5, -5, -5, -5), label = c(20, 40, 60, 80)), size = label.size -1, angle = 60, vjust = -.5) + # Cl axis
+    #geom_text(aes(grid3p1$x1 - 5, grid3p1$y1, label = c(80, 60, 40, 20)), size=3, angle = 60, vjust = -1.5, hjust = 1) + # diamond Na axis
+    geom_text(aes(grid3p1$x2 + 5, grid3p1$y2, label = c(20, 40, 60, 80)), size = label.size -1, angle =  60, vjust = -1, hjust = 0) + # diamond Ca axis
+    geom_text(aes(grid3p2$x1 - 5, grid3p2$y1, label = c(20, 40, 60, 80)), size = label.size -1, angle = -60, vjust = -1, hjust = 1) + # diamond SO4 axis
+    #geom_text(aes(grid3p2$x2 + 5, grid3p2$y2, label = c(80, 60, 40, 20)), size=3, angle =  90) + # diamond HCO3 axis
+    theme_bw() +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.border = element_blank(), axis.ticks = element_blank(),
+          axis.text.x = element_blank(), axis.text.y = element_blank(),
+          axis.title.x = element_blank(), axis.title.y = element_blank())
+  return(p)
+}
+```
+
+```{r Data preperation and piper plot, echo=FALSE, fig.height=10, fig.width=10, fig.cap="Piper plot of the hydrochemical data from Samos"}
+library(ggplot2)
+library(ggrepel)
+library("hydrogeo")
+
+if(exists("CO3_meq")){
+   CO3 = CO3_meq 
+ }else{
+   CO3 = replicate(length(water_analysis$Sample), 0)
+ }
+
+milliequivalents = list( Ca   = Ca_meq,
+                         Mg   = Mg_meq,
+                         Na   = Na_meq,
+                         K    = K_meq,
+                         Cl   = Cl_meq,
+                         SO4  = SO4_meq,
+                         CO3 = CO3,
+                         HCO3 = HCO3_meq,
+                         "Samples" = water_analysis$Sample,
+                         "TDS" = water_analysis$TDS,
+                         "Cluster" = water_analysis$Cluster)
+
+### This transforms the meq/L to percents 
+percents <- toPercent(milliequivalents)
+
+data <- as.data.frame(percents)
+
+### This applies plot coordinates to the variables
+piper_data <- transform_piper_data(Ca   = data$Ca,
+                                   Mg   = data$Mg,
+                                   Cl   = data$Cl,
+                                   SO4  = data$SO4,
+                                   name = data$Samples)
+
+piper_data <- merge(piper_data,
+                     data[, c("TDS", "Cluster", "Samples")],
+                     by.y = "Samples",
+                     by.x = "observation")
+
+#######
+
+piper_data$Cluster= as.factor(piper_data$Cluster)
+piper_labels = as.character(piper_data$observation)
+piper_data$label = piper_labels
+rm(piper_labels)
+
+##### Only samples
+
+#piper_1 = ggplot_piper() + geom_point(aes(x,y,colour=factor(observation), size = 0.05, alpha= .5), data=piper_data) + 
+  #labs(color = "Water samples") + theme(legend.position="bottom")+geom_text_repel(data =piper_data, aes(x, y, label = label), size = 2, max.overlaps = 30)
+
+#piper_1
+
+#### Samples, TDS, Clusters
+
+piper_2 = ggplot_piper() + geom_point(aes(x,y,colour=factor(Cluster), size = TDS), data=piper_data) + 
+  labs(color = "Cluster") + 
+  theme(legend.position="bottom")+
+  geom_text_repel(data =piper_data, aes(x, y, label = label), size = 3, max.overlaps = 30, alpha = 0.5 )
+
+piper_2 + scale_size_area()+ scale_size_continuous(range = c(1, 10))
+
+ggsave(file="Piper.svg", piper_2, width=10, height=10)
+
+```
+
+## 3.2. Shoeller plot
+
+```{r Reorder milliequivalents data frame for the shoeller plot, include=FALSE,}
+
+library(tidyverse)
+
+milliequivalents = as.data.frame(milliequivalents)
+milliequivalents$Cluster = as.factor(milliequivalents$Cluster)
+
+if (exists("NO3_meq")) {
+  milliequivalents$NO3 = NO3_meq
+}
+
+if (exists("Br_meq")) {
+  milliequivalents$Br =  Br_meq
+}
+
+if (exists("CO3_meq")) {
+  milliequivalents$CO3 =  CO3_meq
+}
+
+### Elements and their order to be shown in shoeller plot.
+milliequivalents_shoeller= milliequivalents%>% 
+  select(Samples,Cluster,TDS,K,Na,Cl,Ca,SO4,Mg,HCO3)
+
+### Copy the Ions (not Samples, Cluster, TDS) and place assign them as character (e.g. "Na", "cl" ) to the idmeasure.vars variable as instructed in the next chunk! 
+```
+
+Plot the shoeller
+
+```{r Schoeller Diagram, echo=FALSE, fig.height=12, fig.width=10, warning=FALSE, fig.cap=" Shoeller plot of the hydrochemical data from Samos" }
+
+library(dplyr)
+library(directlabels)
+library(reshape2)
+library(scales)
+library(ggplot2)
+library(plotly)
+
+shoeller_data = subset(milliequivalents_shoeller, select=-c(TDS))
+###
+### HERE : assign the ions you want to plot to the idmeasure.vars variable
+###
+melted_shoeller_data = melt(shoeller_data,id.vars=c("Cluster","Samples"),idmeasure.vars = c("K","Na","Cl","Ca","SO4","Mg","HCO3"))
+
+###  
+shoeller_plot= ggplot(data = melted_shoeller_data)+
+  geom_line(aes(x = variable, y = value, group = Samples, colour = Cluster), alpha = 0.8)+
+  geom_dl(aes(x = variable, y = value,label = Samples),method = list(dl.combine("first.qp","last.qp")), cex = 2, size= 0.01)+
+  geom_point(aes(x = variable, y = value,colour = Cluster, group = Samples), alpha= 0.5)+
+  scale_x_discrete()+
+  theme_light()+
+  scale_y_continuous(trans = scales::log10_trans(),
+                     breaks = scales::pretty_breaks(),
+                     labels = prettyNum)+
+  labs(y = "meq/L", x= "")+
+  theme(legend.position="bottom")+
+  annotation_logticks(sides = "lr")
+
+ggsave(file= "Shoeller_all.svg", shoeller_plot , width=10, height=12)
+
+shoeller_plot  
+```
+
+```{r Mean value for each cluster and mean shoeller plot, echo=FALSE, fig.cap="Shoeller plot presenting the *average* concentration of each cluster", fig.height=7, message=FALSE, warning=FALSE}
+
+library(knitr)
+library(ggplot2)
+### Choose the numeric elements to be averaged for each cluster
+summary_milliequivalents = subset(shoeller_data, select=-c(Samples))
+
+mean_values_of_clusters = aggregate(. ~ Cluster, data = summary_milliequivalents, FUN = function(x) c( mn = mean(x) ) )
+
+kable(mean_values_of_clusters,align = 'c', caption = 'Mean values for each cluster ($meq/L$)')
+
+
+
+mean_values_of_clusters = melt(mean_values_of_clusters,id.vars=c("Cluster"),idmeasure.vars = c("K","Na","Cl","Ca","SO4","Mg","HCO3"))
+
+shoeller_avg = ggplot(data = mean_values_of_clusters)+
+  geom_line(aes(x = variable, y = value, group = Cluster, colour = Cluster), alpha = 0.8)+
+  geom_point(aes(x = variable, y = value,colour = Cluster, group =Cluster))+
+  scale_x_discrete()+
+  theme_light()+
+  scale_y_continuous(trans = scales::log10_trans(),
+                     breaks = scales::pretty_breaks(),
+                     labels = prettyNum)+
+  labs(y = "meq/L", x= "")+
+  theme(legend.position="bottom")+
+  annotation_logticks(sides = "lr")
+
+ggsave(file="Shoeller_cluster_average.svg", shoeller_avg , width=8, height=5)
+
+shoeller_avg
+```
+
+```{r Summarizing boxplots, echo=FALSE, fig.height=6, fig.cap= " Boxplots of the clusters"}
+
+library(ggplot2)
+library(scales)
+
+### same y axis
+box_com=ggplot(data = melted_shoeller_data, mapping = aes(x = variable, y = value, color= Cluster)) + 
+  geom_boxplot()+
+  scale_x_discrete()+
+  theme_light()+
+  labs(y = "Common scale: in meq/L", x= "")+
+  theme(legend.position="bottom")+
+  facet_wrap(~Cluster)
+
+ggsave(file="Boxplot_common_scale.svg", box_com , width=8, height=5)
+box_com
+### free y axis
+free_com =ggplot(data = melted_shoeller_data, mapping = aes(x = variable, y = value, color= Cluster)) + 
+  geom_boxplot()+
+  scale_x_discrete()+
+  theme_light()+
+  labs(y = "Free scale: meq/L", x= "")+
+  theme(legend.position="bottom")+
+  facet_wrap(~Cluster, scales = "free")
+
+ggsave(file="Boxplot_free_scale.svg", free_com , width=8, height=5)
+free_com
+```
+
+## 3.4. Composite diagrams
+
+```{r Na-Cl, echo=FALSE, fig.cap=""}
+library(ggplot2)
+library(scales)
+library(latex2exp)
+library(ggforce)
+
+Na_to_Cl_plot =ggplot(data=milliequivalents)+
+  geom_point(aes(x = Cl , y = Na, color = Cluster))+
+  geom_abline(intercept = 0, slope = 1, color = "grey", linetype = "dashed")+
+  theme_light()+
+  xlab(TeX(r'($Cl ^{-}\;meq/L$)')) +
+  ylab(TeX(r'($Na ^{+}\;meq/L$)')) +
+  
+  
+  ### adds zoomed window 
+  facet_zoom(ylim = c(0, 30), xlim = c(0, 40))
+
+
+ggsave(file="Na_vs_Cl.svg", Na_to_Cl_plot)
+Na_to_Cl_plot
+```
+
+```{r Br-Cl, echo=FALSE, fig.cap=""}
+library(ggplot2)
+library(scales)
+library(latex2exp)
+
+if(exists("Br_meq")) {
+  Br_to_Cl=  ggplot(data = milliequivalents) +
+    geom_point(data = subset(milliequivalents, Br > 0),aes(x = Cl , y = Br, color = Cluster)) +
+    geom_abline(
+      intercept = 0,
+      slope = 1,
+      color = "grey",
+      linetype = "dashed"
+    ) +
+    theme_light() +
+   xlab(TeX(r'($Cl ^{-}\;meq/L$)')) +
+  ylab(TeX(r'($Br ^{-}\;meq/L$)'))+
+  # Delete this part if you don't want log axes
+    scale_y_continuous(trans = scales::log10_trans(),
+                   breaks = scales::pretty_breaks(),
+                   labels = prettyNum)+
+  scale_x_continuous(trans = scales::log10_trans(),
+                     breaks = scales::pretty_breaks(),
+                     labels = prettyNum)
+}
+
+if(exists("Br_vs_Cl")){ggsave(file="Br_vs_Cl.svg",  Br_to_Cl)}
+```
+
+```{r Ca to SO4, echo=FALSE, fig.cap=""}
+library(ggplot2)
+library(scales)
+library(latex2exp)
+
+
+Ca_to_SO4_plot =ggplot(data=milliequivalents)+
+  geom_point(aes(x = SO4 , y = Ca, color = Cluster))+
+  geom_abline(intercept = 0, slope = 1, color = "grey", linetype = "dashed")+
+  theme_light()+
+   xlab(TeX(r'($SO4 ^{2-}\;meq/L$)')) +
+  ylab(TeX(r'($ Ca^{2+}\;meq/L$)'))+
+   facet_zoom(ylim = c(0,15), xlim = c(0,15))
+  
+
+ggsave(file="Ca_vs_SO4.svg",  Ca_to_SO4_plot)
+Ca_to_SO4_plot 
+```
+
+```{r Na_plus_K_to_NaMgCaK, echo=FALSE, fig.cap=""}
+
+library(ggforce)
+
+Na_plus_K_to_NaMgCaK =ggplot(data=milliequivalents)+
+  geom_point(aes(x = (Na+Mg+K+Ca) , y = Na+K, color = Cluster))+
+  geom_abline(intercept = 0, slope = c(1,0.5,1.5), color = "grey", linetype = "dashed")+
+  theme_light()+
+  labs(y = "[Na + K] meq/L", x= "[Na+K+Mg+Ca] meq/L") +
+
+  ### adds zoomed window 
+  facet_zoom(ylim = c(0, 50), xlim = c(0,50))
+
+
+
+
+ggsave(file="Na_plus_K_vs__NaMgCaK.svg",  Na_plus_K_to_NaMgCaK)
+Na_plus_K_to_NaMgCaK
+```
+
+```{r Ca_plus_Mg_to_HCO3, echo=FALSE, fig.cap=""}
+library(ggplot2)
+library(latex2exp)
+library(ggforce)
+
+Ca_plus_Mg_to_HCO3 =ggplot(data=milliequivalents)+
+  geom_point(aes(x = HCO3 , y = (Ca+Mg), color = Cluster))+
+  geom_abline(intercept = 0, slope = 1, color = "grey", linetype = "dashed")+
+  theme_light()+
+   xlab(TeX(r'($HCO3^{-}\;meq/L$)')) +
+  ylab(TeX(r'($ Ca + Mg\;meq/L$)')) +
+  
+ 
+  ### adds zoomed window 
+  facet_zoom(ylim = c(0, 30), xlim = c(0, 10))
+
+ggsave(file="Ca_plus_Mg_vs_HCO3.svg",  Ca_plus_Mg_to_HCO3)
+Ca_plus_Mg_to_HCO3
+
+```
+
+```{r Cl_to_HCO3, echo=FALSE, fig.cap=""}
+library(ggplot2)
+library(latex2exp)
+library(ggforce)
+
+Cl_to_HCO3 =ggplot(data=milliequivalents)+
+  geom_point(aes(x =HCO3 , y = Cl, color = Cluster))+
+  geom_abline(intercept = 0, slope = 1, color = "grey", linetype = "dashed")+
+  theme_light()+
+  labs(y = "Cl meq/L", x= "HCO3 meq/L")+
+  xlab(TeX(r'($HCO3^{-}\;meq/L$)')) +
+  ylab(TeX(r'($Cl ^{-}\;meq/L$)'))+
+  
+  facet_zoom(ylim = c(0, 30), xlim = c(0, 7))
+  
+
+ggsave(file="Cl_vs_HCO3.svg",  Cl_to_HCO3)
+
+Cl_to_HCO3
+```
+
+```{r Arrange composite plots into a grid, eval=FALSE, include=FALSE, fig.cap=}
+library(ggpubr)
+
+composite_plot_grid = ggarrange(
+  Na_to_Cl_plot, Ca_to_SO4_plot, Na_plus_K_to_NaMgCaK, Ca_plus_Mg_to_HCO3, Cl_to_HCO3,
+  ncol = 3, 
+  nrow = 2, labels = c("A", "B", "C", "D", "E"),
+  common.legend = TRUE, legend = "bottom", heights = 10, font.label = list(size = 10)) 
+
+ggsave(file="Composite_chemical_ratios.svg",  composite_plot_grid)
+
+composite_plot_grid
+```
+
+## 3.5. Isotopic data
+
+```{r 2H to 18O, echo=FALSE, fig.cap=""}
+library(ggplot2)
+library(latex2exp)
+library(scales)
+
+if(("d18O" %in% colnames(water_analysis)) && ("d2H" %in% colnames(water_analysis)) ) {
+
+GMWL <- function(x) {
+  8 * x + 10
+}
+MMWL <- function(x) {
+  8 * x + 20
+}
+
+
+deuterium_to_18O = ggplot(data = water_analysis)  + stat_function(
+  data = data.frame(x = 0),
+  aes(x = x, col = "GMWL", linetype = "GMWL"),
+  col = "black",
+  fun = GMWL
+) +
+  stat_function(
+    data = data.frame(x = 0),
+    aes(x = x, col = "MMWL", linetype = "MMWL"),
+    col = "black",
+    fun = MMWL
+  ) +
+  geom_point(aes(
+    x = d18O
+,
+    y = d2H
+,
+    stroke = 0.1,
+    color = as.factor(Cluster)
+  ), alpha = 0.9) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
+  xlab(expression(paste(delta ^ {
+    18
+  }, "O(‰, V-SMOW)"))) +
+  ylab(expression(paste(delta ^ {
+    2
+  }, "H(‰, V-SMOW)"))) +
+  theme_light() +
+  theme(legend.position = "right", panel.grid.minor = element_blank()) +
+  labs(colour = "Cluster",
+       linetype = "")
+
+ggsave(file = "d18O_2H.svg",deuterium_to_18O,width = 10,height = 8)}
+
+if(exists("deuterium_to_18O")){
+  deuterium_to_18O
+}
+
+
+```
+
+```{r DE to 18O, echo=FALSE, fig.cap=""}
+library(ggplot2)
+library(scales)
+
+ if(("d18O" %in% colnames(water_analysis)) && ("D_Excess" %in% colnames(water_analysis)) ) {
+
+de_to_O18 = ggplot(data = water_analysis) +
+  geom_point(aes(
+    x = d18O
+,
+    y = D_Excess
+,
+    stroke = 0.1,
+    color = as.factor(Cluster)
+  ), alpha = 0.9) +
+  xlab(expression(paste(delta ^ {
+    18
+  }, "O(‰, V-SMOW)"))) +
+  ylab(expression(paste("DE(‰)"))) +
+  theme_light() +
+  theme(legend.position = "right", panel.grid.minor = element_blank()) +
+  labs(colour = "Cluster",
+       linetype = "")
+
+ggsave(file = "DE_18O.svg",de_to_O18,width = 10,height = 8)}
+
+
+if(exists("de_to_O18")){
+  de_to_O18
+}
+
+```
+
+```{r cl_to_O18, echo=FALSE, fig.cap=""}
+library(latex2exp)
+library(ggplot2)
+library(scales)
+
+if("d18O" %in% colnames(water_analysis)) {
+o18_to_cl = ggplot(data = water_analysis) +
+  geom_point(aes(
+    x = log(Cl),y =d18O,stroke = 0.1,color = as.factor(Cluster)), alpha = 0.6) +
+  ylab(expression(paste(delta ^ {18}, "O(‰, V-SMOW)"))) +
+  xlab(TeX(r'($log(Cl ^{-})\;meq/L$)'))+ 
+  theme_light() +
+  theme(legend.position = "right", panel.grid.minor = element_blank()) +
+  labs(colour = "Cluster",
+           linetype = "")
+
+ggsave(file = "Cl_18O.svg", o18_to_cl ,width = 10,height = 8)
+}
+
+if(exists("o18_to_cl")){
+ 
+  o18_to_cl 
+  
+  }
+```
+
+```{r DE_to_Cl, echo=FALSE, fig.cap=""}
+library(latex2exp)
+library(ggplot2)
+library(scales)
+
+if("D_Excess" %in% colnames(water_analysis)) {
+de_to_cl = ggplot(data = water_analysis) +
+  geom_point(aes(
+    x = log(Cl),y = D_Excess,stroke = 0.1,color = as.factor(Cluster)), alpha = 0.6) +
+  ylab(expression(paste("DE(‰)"))) +
+  xlab(TeX(r'($log(Cl ^{-})\;meq/L$)'))+ 
+  theme_light() +
+  theme(legend.position = "right", panel.grid.minor = element_blank()) +
+  labs(colour = "Cluster",
+           linetype = "")
+
+ggsave(file = "DE_Cl.svg", de_to_cl,width = 10,height = 8) 
+}
+
+if(exists("de_to_cl")){
+ 
+  de_to_cl
+  
+  }
+
+```
+
+```{r Arrange isotope plots into a grid, eval=FALSE, include=FALSE}
+library(ggpubr)
+
+composite_isotope_plot_grid = ggarrange(
+  deuterium_to_18O,de_to_O18,o18_to_cl ,de_to_cl,
+  ncol = 2, 
+  nrow = 2, labels = c("A", "B", "C", "D"),
+  common.legend = TRUE, legend = "bottom", heights = 10, font.label = list(size = 10)) 
+
+ggsave(file="Composite_isotopic_ratios.svg",  composite_isotope_plot_grid)
+
+composite_plot_grid
+```
+
+```{r Speciation calculation, eval=FALSE, include=FALSE}
+library(tidyverse)
+library(tidyphreeqc)
+
+# Run simple speciation calculations for each sample and save  to .txt file in the working directory
+
+speciation_log <- file("PHREEQC_RUN.txt")
+
+for(i in 0:length(water_analysis$Sample)) {
+  print(water_analysis$Sample[i])
+  phr_run(
+    phr_solution_list(
+      pH = 7,
+      temp = 25,
+      units = "mg/L",
+      Na = water_analysis$Na[i],
+      K = water_analysis$K[i],
+      Mg = water_analysis$Mg[i],
+      S = water_analysis$SO4[i],
+      C = water_analysis$HCO3[i],
+      Cl = water_analysis$Cl[i]
+    )
+  ) %>%
+    phr_print_output()
+  
+  sink(speciation_log, append = TRUE, type = "output") 
+  
+  }
+```
+
+------------------------------------------------------------------------
+
+# Analysis interpretation
+
+## Data assesment
+
+A total of 29 hydrochemical analyses were examined from the study area Samos, Greece. Only one site, WK021, presented a \|Charge Balance Error\| above 5% ( -5.5%) and was thus excluded from further analysis.
+
+## Cluster analysis
+
+A Hierarchical cluster analysis was used to group different water samples based on the ions: Cl^-^, HCO~3~^-^, SO~4~^2-^,Ca^2+^, Mg^2+^, Na^+^, K^+^. Prior to clustering, the CBE filtered data was $log_{10}$ transformed and afterwards z-scores were calculated and used as the normalized input for the analysis. The **Manhattan** or **City Block Distance (CDB)** was used as a measure of similarity and **Ward's** method for the agglomeration.
+
+```{r Summaries by cluster, echo=FALSE}
+library(ggplot2)
+
+ggplot(data = water_analysis) + 
+  geom_bar(mapping = aes(fill = as.factor(type_water), x = as.factor(Cluster)), position = "dodge")+theme_minimal() + scale_fill_brewer(palette = "Set3")
+
+ggplot(data = water_analysis,
+       mapping = aes(
+         x = as.factor(Cluster),
+         y = D_Excess,
+         color = as.factor(Cluster)
+       )) +
+  geom_boxplot()+theme_light()
+
+ggplot(data = water_analysis,
+       mapping = aes(
+         x = as.factor(Cluster),
+         y = d18O,
+         color = as.factor(Cluster)
+       )) +
+  geom_boxplot()+theme_light()
+
+
+
+
+
+```
+
+```{r summary }
+tapply(water_analysis$Cl, water_analysis$Cluster, summary)
+```
