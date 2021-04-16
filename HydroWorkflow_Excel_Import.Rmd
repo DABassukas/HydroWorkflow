@@ -15,6 +15,8 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(message = FALSE)
 ```
 
+Just testing this out!
+
 ```{r Install packages, eval=FALSE, include=FALSE}
 #Install packages ( only needed when using the script for the first time!)
 install.packages(c("readxl","PeriodicTable","knitr","ggplot2", "ggmap","plotly","factoextra","tibble","cluster","purr","tidyr", "magrittr", "scales","reshape2","directlabels", "dplyr", "hydrogeo", "ggrepel","readxl","ggplot2", "knitr","PeriodicTable","RMySQL","devtools", "latex2exp","devtools", "ggforce","kableExtra"))
