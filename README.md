@@ -60,7 +60,7 @@ Other variables that can be included and are by default incorporated in the scri
 | d2H | d18O  | D_Excess | NO3 | Br | CO3 |
 +-----+-------+----------+-----+----+-----+
 
-$\delta^2H, \delta^{18}O$ and $D-Excess$ should be provided together!
+$ \delta^2H, \delta^{18}O$ and $D-Excess$ should be provided together!
 
 2) Find the `r Provide the instructions for your run` chunk
 
