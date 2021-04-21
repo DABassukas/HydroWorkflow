@@ -450,7 +450,7 @@ rm(list=c("res.hc","hc1","water_analysis_clust","water_analysis_clust_scaled","m
 
 ## 3.1. Piper plot
 
-The code for the piper diagram is from [<https://github.com/markolipka/ggplot_Piper>](https://github.com/markolipka/ggplot_Piper)
+The code for the piper diagram is from [\<https://github.com/markolipka/ggplot_Piper\>](https://github.com/markolipka/ggplot_Piper)
 
 ```{r Functions for piper plot, include=FALSE}
 
