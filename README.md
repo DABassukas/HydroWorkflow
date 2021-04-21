@@ -36,7 +36,7 @@ At the time being, two different workflows exist based on the type of input data
 
 ### .xlsx data input
 
-1: Create an .xlsx containing your water analyses. For the script to run the following variables must be provided with the exact column names shown below ( The column order is irrelevant). Longitude and Latitude in Decimal Degrees - WGS 84, ions in mg/L and isotopic data in per mil.
+1) Create an .xlsx containing your water analyses. For the script to run the following variables must be provided with the exact column names shown below ( The column order is irrelevant). Longitude and Latitude in Decimal Degrees - WGS 84, ions in mg/L and isotopic data in per mil.
 
 
 
@@ -58,7 +58,7 @@ Deuterium, d18O and Deuterium excess should be provided together!
 
 
 
-2: Find the **r Provide the instructions for your run** chunk
+2) Find the **r Provide the instructions for your run** chunk
 
 -   Provide the path to the .xlsx containing your data to the
 
@@ -68,13 +68,13 @@ Deuterium, d18O and Deuterium excess should be provided together!
 
 -   Specify map corners. The two map corners represent the coordinates of the upper left and lower right points of a rectangle covering the your study area.
 
-3: Knit!
+3) Knit!
 
 
 
 ### MedSal database input
 
-1: Find the **r Provide the instructions for your run** chunk
+1) Find the **r Provide the instructions for your run** chunk
 
 -   Choose the area you want to examine by providing the Medsal Code
 
@@ -88,4 +88,4 @@ Deuterium, d18O and Deuterium excess should be provided together!
 
 -   Choose the clustering parameters and the number of clusters
 
-2: Knit!
+2) Knit!
