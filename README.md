@@ -78,7 +78,7 @@ Deuterium, ??18O and Deuterium excess should be provided together!
 
 -   Choose the area you want to examine by providing the Medsal Code
 
-    medsalgeochem = subset(medsalgeochem,MedsalCode==`**"RHO"**`)
+    medsalgeochem = subset(medsalgeochem,MedsalCode==**"RHO"**)
 
 -   Choose the period of interest ( always in yyyy-mm-dd format)
 
