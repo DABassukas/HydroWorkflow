@@ -36,7 +36,7 @@ At the time being, two different workflows exist based on the type of input data
 
 ### .xlsx data input
 
-1)  Create an .xlsx containing your water analyses. For the script to run the following variables must be provided with the exact column names shown below ( The column order is irrelevant). *Longitude and Latitude in Decimal Degrees - WGS 84, ions in mg/L and isotopic data in per mil.*
+Create an .xlsx containing your water analyses. For the script to run the following variables must be provided with the exact column names shown below ( The column order is irrelevant). *Longitude and Latitude in Decimal Degrees - WGS 84, ions in mg/L and isotopic data in per mil.*
 
 
 
