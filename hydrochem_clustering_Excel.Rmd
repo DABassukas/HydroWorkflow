@@ -398,7 +398,7 @@ dendro
 
 Each sample's respective cluster value is added as a column in `water_analysis` dataframe.
 
-```{r add clusters to data, echo=TRUE}
+```{r add clusters to data, eval=FALSE, include=FALSE}
 
 clusterCut <- cutree(hc1,numberofclusters) 
 
