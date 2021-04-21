@@ -178,7 +178,6 @@ pre code {
 <li><p>Step 4: Data visualization</p></li>
 </ul>
 <p>At the time being, two different workflows exist based on the type of input data. Input data are either excel/csv files that get imported or through direct access to the <a href="https://www.uhydro.de/medsaldba">MedSal Database</a>. Differences regarding the features are summarized in the table below:</p>
-<p>Code from: <a href="https://github.com/markolipka/ggplot_Piper" class="uri">https://github.com/markolipka/ggplot_Piper</a></p>
 <table>
 <thead>
 <tr class="header">
@@ -195,8 +194,8 @@ pre code {
 </tr>
 <tr class="even">
 <td>Charge balance error</td>
-<td>???</td>
-<td>???</td>
+<td>:heavy_check_mark:</td>
+<td>:heavy_check_mark:</td>
 </tr>
 <tr class="odd">
 <td>Cluster analysis</td>
@@ -205,23 +204,23 @@ pre code {
 </tr>
 <tr class="even">
 <td>Data preparation</td>
-<td>???</td>
-<td>???</td>
+<td>:heavy_check_mark:</td>
+<td>:heavy_check_mark:</td>
 </tr>
 <tr class="odd">
 <td>Clustering</td>
-<td>???</td>
-<td>???</td>
+<td>:heavy_check_mark:</td>
+<td>:heavy_check_mark:</td>
 </tr>
 <tr class="even">
 <td>Dendrogram</td>
-<td>???</td>
-<td>???</td>
+<td>:heavy_check_mark:</td>
+<td>:heavy_check_mark:</td>
 </tr>
 <tr class="odd">
 <td>Cluster map</td>
-<td>???</td>
-<td>x</td>
+<td>:heavy_check_mark:</td>
+<td>:x:</td>
 </tr>
 <tr class="even">
 <td>Data visualization</td>
@@ -229,27 +228,28 @@ pre code {
 <td></td>
 </tr>
 <tr class="odd">
-<td>Piper plot</td>
-<td>???</td>
-<td>???</td>
+<td>Piper plot**</td>
+<td>:heavy_check_mark:</td>
+<td>:heavy_check_mark:</td>
 </tr>
 <tr class="even">
 <td>Shoeller plot</td>
-<td>???</td>
-<td>???</td>
+<td>:heavy_check_mark:</td>
+<td>:heavy_check_mark:</td>
 </tr>
 <tr class="odd">
 <td>Ion ratios</td>
-<td>???</td>
-<td>???</td>
+<td>:heavy_check_mark:</td>
+<td>:heavy_check_mark:</td>
 </tr>
 <tr class="even">
 <td>Isotope data</td>
-<td>???</td>
-<td>x</td>
+<td>:heavy_check_mark:</td>
+<td>:x:</td>
 </tr>
 </tbody>
 </table>
+<p>**Code from: <a href="https://github.com/markolipka/ggplot_Piper" class="uri">https://github.com/markolipka/ggplot_Piper</a></p>
 <div id="xlsx-data-input" class="section level3">
 <h3>.xlsx data input</h3>
 <ol style="list-style-type: decimal">
@@ -284,7 +284,7 @@ pre code {
 </tr>
 </tbody>
 </table>
-<p>Deuterium, ??18O and Deuterium excess should be provided together!</p>
+<p>Deuterium, <span class="math inline">\(\delta^{18}\)</span>O and Deuterium excess should be provided together!</p>
 <ol start="2" style="list-style-type: decimal">
 <li>Find the <strong>r Provide the instructions for your run</strong> chunk</li>
 </ol>
@@ -305,7 +305,7 @@ pre code {
 </ol>
 <ul>
 <li><p>Choose the area you want to examine by providing the Medsal Code</p>
-<p>medsalgeochem = subset(medsalgeochem,MedsalCode==<code>**&quot;RHO&quot;**</code>)</p></li>
+<p>medsalgeochem = subset(medsalgeochem,MedsalCode==<strong>“RHO”</strong>)</p></li>
 <li><p>Choose the period of interest ( always in yyyy-mm-dd format)</p>
 <p>Ex: After 2020-01-01 medsalgeochem = subset(medsalgeochem,date &gt;= “2020-01-01”)</p>
 <p>Ex: From 2000-01-01 to 2010-01-01 .., date &gt;= “2000-01-01” &amp; date =&lt; “2010-01-01”</p></li>
@@ -314,7 +314,6 @@ pre code {
 <ol start="2" style="list-style-type: decimal">
 <li>Knit!</li>
 </ol>
-<p>:heavy_check_mark:</p>
 </div>
 </div>
 

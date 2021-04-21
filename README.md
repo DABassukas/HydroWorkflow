@@ -53,7 +53,7 @@ Other variables that can be included and are by default incorporated in the scri
 |-----|------|----------|-----|----|-----|
 | d2H | d18O | D_Excess | NO3 | Br | CO3 |
 
-Deuterium, ??18O and Deuterium excess should be provided together!
+Deuterium, $\delta^{18}$O and Deuterium excess should be provided together!
 
 
 
