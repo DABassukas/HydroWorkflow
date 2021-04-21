@@ -409,7 +409,7 @@ water_analysis= cbind(water_analysis, Cluster = clusterCut )
 
 The spatial context of the clustering process was visualized:
 
-```{r create map, echo=FALSE, fig.cap=", fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
+```{r create map, echo=FALSE,  fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
 library(ggmap)
 library(ggrepel)
 
