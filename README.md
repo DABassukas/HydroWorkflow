@@ -27,12 +27,12 @@ Code from: <https://github.com/markolipka/ggplot_Piper>
 
 1) Create an .xlsx containing your water analyses. For the script to run the following variables must be provided with the exact column names shown below ( The column order is irrelevant). *Longitude and Latitude in Decimal Degrees - WGS 84, ions in mg/L and isotopic data in per mil.*
 
-
+|        |          |           |     |      |     |     |     |     |     |
 |--------|----------|-----------|---- |------|-----|-----|-----|-----|-----|
 | Sample | Latitude | Longitude | Cl  | HCO3 | SO4 | Ca  | Mg  | Na  | K   |
 
 Other variables that can be included and are by default incorporated in the script are:
-
+|     |       |          |     |    |     |
 |-----|-------|----------|-----|----|-----|
 | d2H | d18O  | D_Excess | NO3 | Br | CO3 |
 
