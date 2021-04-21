@@ -16,36 +16,53 @@ At the time being, two different workflows exist based on the type of input data
 
 
 
+|                         | .xlsx              | database           |
+|-------------------------|--------------------|--------------------|
+| Data quality assessment |                    |                    |
+| Charge balance error    | :heavy_check_mark: | :heavy_check_mark: |
+| Cluster analysis        |                    |                    |
+| Data preparation        | :heavy_check_mark: | :heavy_check_mark: |
+| Clustering              | :heavy_check_mark: | :heavy_check_mark: |
+| Dendrogram              | :heavy_check_mark: | :heavy_check_mark: |
+| Cluster map             | :heavy_check_mark: |       :x:          |
+| Data visualization      |                    |                    |
+| Piper plot**            | :heavy_check_mark: | :heavy_check_mark: |
+| Shoeller plot           | :heavy_check_mark: | :heavy_check_mark: |
+| Ion ratios              | :heavy_check_mark: | :heavy_check_mark: |
+| Isotope data            | :heavy_check_mark: | :x:                |
 
-
-
-Code from: <https://github.com/markolipka/ggplot_Piper>
-
+**Code from: <https://github.com/markolipka/ggplot_Piper>
 
 
 ### .xlsx data input
 
-1) Create an .xlsx containing your water analyses. For the script to run the following variables must be provided with the exact column names shown below ( The column order is irrelevant). *Longitude and Latitude in Decimal Degrees - WGS 84, ions in mg/L and isotopic data in per mil.*
+1)  Create an .xlsx containing your water analyses. For the script to run the following variables must be provided with the exact column names shown below ( The column order is irrelevant). *Longitude and Latitude in Decimal Degrees - WGS 84, ions in mg/L and isotopic data in per mil.*
 
-|        |          |           |     |      |     |     |     |     |     |
-|--------|----------|-----------|---- |------|-----|-----|-----|-----|-----|
-| Sample | Latitude | Longitude | Cl  | HCO3 | SO4 | Ca  | Mg  | Na  | K   |
+
+
+|        |          |           |    |      |     |    |    |    |   |    
+|--------|----------|-----------|----|------|-----|----|----|----|---|
+| Sample | Latitude | Longitude | Cl | HCO3 | SO4 | Ca | Mg | Na | K |
+
+
+
 
 Other variables that can be included and are by default incorporated in the script are:
-|     |       |          |     |    |     |
-|-----|-------|----------|-----|----|-----|
-| d2H | d18O  | D_Excess | NO3 | Br | CO3 |
+
+|     |      |          |     |    |     |
+|-----|------|----------|-----|----|-----|
+| d2H | d18O | D_Excess | NO3 | Br | CO3 |
+
+Deuterium, ??18O and Deuterium excess should be provided together!
 
 
-Deuterium, delta should be provided together!
 
-2) Find the **r Provide the instructions for your run** chunk
+
+2)  Find the **r Provide the instructions for your run** chunk
 
 -   Provide the path to the .xlsx containing your data to the
 
-
-     water_analysis <- read_excel( ''C/./your_data.xlsx'')
-
+    water_analysis \<- read_excel( ''C/.../your_data.xlsx'')
 
 -   Choose the clustering parameters and the number of clusters
 
@@ -55,10 +72,9 @@ Deuterium, delta should be provided together!
 
 
 
-
 ### MedSal database input
 
-1) Find the **r Provide the instructions for your run** chunk
+1)  Find the **r Provide the instructions for your run** chunk
 
 -   Choose the area you want to examine by providing the Medsal Code
 
@@ -66,10 +82,10 @@ Deuterium, delta should be provided together!
 
 -   Choose the period of interest ( always in yyyy-mm-dd format)
 
-    Ex:  After 2020-01-01 medsalgeochem = subset(medsalgeochem,date \>= "2020-01-01")
+    Ex: After 2020-01-01 medsalgeochem = subset(medsalgeochem,date \>= "2020-01-01")
 
-    Ex:  From 2000-01-01 to 2010-01-01  .., date \>= "2000-01-01" & date =\< "2010-01-01"
+    Ex: From 2000-01-01 to 2010-01-01 .., date \>= "2000-01-01" & date =\< "2010-01-01"
 
 -   Choose the clustering parameters and the number of clusters
 
-2) Knit!
+2)  Knit!

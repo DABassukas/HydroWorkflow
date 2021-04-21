@@ -167,35 +167,155 @@ pre code {
 </div>
 
 
-<div id="clustering-water-samples-based-on-main-ions-and-cations" class="section level1">
-<h1>Clustering water samples based on main ions and cations</h1>
-<p>This project provides the basis in order to perform an efficient and reproducable clustering on water samples. It has been created in the framework of the <a href="https://medsal.eu/">MedSal project</a>.</p>
-<p>Input data are either excel/csv files that get imported or through direct access to the <a href="https://www.uhydro.de/medsaldba">MedSal Database</a>.</p>
+<div id="clustering-water-samples-based-on-main-anions-and-cations" class="section level1">
+<h1>Clustering water samples based on main anions and cations</h1>
+<p>This project provides the basis in order to perform a reproducible clustering on water samples which can facilitate the detection of hydrochemical End-members . It has been created in the framework of the <a href="https://medsal.eu/">MedSal project</a>.</p>
 <p>It currently includes following steps:</p>
 <ul>
-<li><p>Step 1: Data</p>
-<ul>
-<li>Import data</li>
-<li>Subset data</li>
-</ul></li>
-<li><p>Step 2: Data quality assessment</p>
-<ul>
-<li>Calculate the charge balance error</li>
-</ul></li>
-<li><p>Step 3: Cluster analysis</p>
-<ul>
-<li>Pre-processing</li>
-<li>Define the number of clusters</li>
-<li>Plot dendrogram of clusters</li>
-</ul></li>
-<li><p>Step 4: Data visualization</p>
-<ul>
-<li>Piper plot</li>
-<li>Shoeller plot</li>
-<li>Boxplots</li>
-<li>Composite diagrams</li>
-</ul></li>
+<li><p>Step 1: Data import</p></li>
+<li><p>Step 2: Data quality assessment and filtering based on the Charge Balance Error</p></li>
+<li><p>Step 3: Cluster analysis</p></li>
+<li><p>Step 4: Data visualization</p></li>
 </ul>
+<p>At the time being, two different workflows exist based on the type of input data. Input data are either excel/csv files that get imported or through direct access to the <a href="https://www.uhydro.de/medsaldba">MedSal Database</a>. Differences regarding the features are summarized in the table below:</p>
+<p>Code from: <a href="https://github.com/markolipka/ggplot_Piper" class="uri">https://github.com/markolipka/ggplot_Piper</a></p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th>.xlsx</th>
+<th>database</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Data quality assessment</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Charge balance error</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="odd">
+<td>Cluster analysis</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Data preparation</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="odd">
+<td>Clustering</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="even">
+<td>Dendrogram</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="odd">
+<td>Cluster map</td>
+<td>???</td>
+<td>x</td>
+</tr>
+<tr class="even">
+<td>Data visualization</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Piper plot</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="even">
+<td>Shoeller plot</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="odd">
+<td>Ion ratios</td>
+<td>???</td>
+<td>???</td>
+</tr>
+<tr class="even">
+<td>Isotope data</td>
+<td>???</td>
+<td>x</td>
+</tr>
+</tbody>
+</table>
+<div id="xlsx-data-input" class="section level3">
+<h3>.xlsx data input</h3>
+<ol style="list-style-type: decimal">
+<li>Create an .xlsx containing your water analyses. For the script to run the following variables must be provided with the exact column names shown below ( The column order is irrelevant). <em>Longitude and Latitude in Decimal Degrees - WGS 84, ions in mg/L and isotopic data in per mil.</em></li>
+</ol>
+<table>
+<tbody>
+<tr class="odd">
+<td>Sample</td>
+<td>Latitude</td>
+<td>Longitude</td>
+<td>Cl</td>
+<td>HCO3</td>
+<td>SO4</td>
+<td>Ca</td>
+<td>Mg</td>
+<td>Na</td>
+<td>K</td>
+</tr>
+</tbody>
+</table>
+<p>Other variables that can be included and are by default incorporated in the script are:</p>
+<table>
+<tbody>
+<tr class="odd">
+<td>d2H</td>
+<td>d18O</td>
+<td>D_Excess</td>
+<td>NO3</td>
+<td>Br</td>
+<td>CO3</td>
+</tr>
+</tbody>
+</table>
+<p>Deuterium, ??18O and Deuterium excess should be provided together!</p>
+<ol start="2" style="list-style-type: decimal">
+<li>Find the <strong>r Provide the instructions for your run</strong> chunk</li>
+</ol>
+<ul>
+<li><p>Provide the path to the .xlsx containing your data to the</p>
+<p>water_analysis &lt;- read_excel( ‘’C/…/your_data.xlsx’’)</p></li>
+<li><p>Choose the clustering parameters and the number of clusters</p></li>
+<li><p>Specify map corners. The two map corners represent the coordinates of the upper left and lower right points of a rectangle covering the your study area.</p></li>
+</ul>
+<ol start="3" style="list-style-type: decimal">
+<li>Knit!</li>
+</ol>
+</div>
+<div id="medsal-database-input" class="section level3">
+<h3>MedSal database input</h3>
+<ol style="list-style-type: decimal">
+<li>Find the <strong>r Provide the instructions for your run</strong> chunk</li>
+</ol>
+<ul>
+<li><p>Choose the area you want to examine by providing the Medsal Code</p>
+<p>medsalgeochem = subset(medsalgeochem,MedsalCode==<code>**&quot;RHO&quot;**</code>)</p></li>
+<li><p>Choose the period of interest ( always in yyyy-mm-dd format)</p>
+<p>Ex: After 2020-01-01 medsalgeochem = subset(medsalgeochem,date &gt;= “2020-01-01”)</p>
+<p>Ex: From 2000-01-01 to 2010-01-01 .., date &gt;= “2000-01-01” &amp; date =&lt; “2010-01-01”</p></li>
+<li><p>Choose the clustering parameters and the number of clusters</p></li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li>Knit!</li>
+</ol>
+<p>:heavy_check_mark:</p>
+</div>
 </div>
 
 
