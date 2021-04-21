@@ -18,14 +18,14 @@ At the time being, two different workflows exist based on the type of input data
 
 |                         | .xlsx              | database           |
 |-------------------------|--------------------|--------------------|
-| Data quality assessment |                    |                    |
+|__Data quality assessment__ |                    |                    |
 | Charge balance error    | :heavy_check_mark: | :heavy_check_mark: |
-| Cluster analysis        |                    |                    |
+|__Cluster analysis__     |                    |                    |
 | Data preparation        | :heavy_check_mark: | :heavy_check_mark: |
 | Clustering              | :heavy_check_mark: | :heavy_check_mark: |
 | Dendrogram              | :heavy_check_mark: | :heavy_check_mark: |
 | Cluster map             | :heavy_check_mark: |       :x:          |
-| Data visualization      |                    |                    |
+|__Data visualization__   |                    |                    |
 | Piper plot**            | :heavy_check_mark: | :heavy_check_mark: |
 | Shoeller plot           | :heavy_check_mark: | :heavy_check_mark: |
 | Ion ratios              | :heavy_check_mark: | :heavy_check_mark: |
