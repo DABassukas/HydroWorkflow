@@ -29,7 +29,7 @@ At the time being, two different workflows exist based on the type of input data
 | Piper plot**            | :heavy_check_mark: | :heavy_check_mark: |
 | Shoeller plot           | :heavy_check_mark: | :heavy_check_mark: |
 | Ion ratios              | :heavy_check_mark: | :heavy_check_mark: |
-| Isotope data            | :heavy_check_mark: | :x:                |
+| Isotope data            | :heavy_check_mark: | :heavy_check_mark:  |
 
 **Code from: <https://github.com/markolipka/ggplot_Piper>
 
