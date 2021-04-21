@@ -18,7 +18,7 @@ At the time being, two different workflows exist based on the type of input data
 
 |                         | .xlsx              | database           |
 |-------------------------|--------------------|--------------------|
-| Data quality assessment |                    |                    |
+|__Data quality assessment__ |                    |                    |
 | Charge balance error    | :heavy_check_mark: | :heavy_check_mark: |
 | Cluster analysis        |                    |                    |
 | Data preparation        | :heavy_check_mark: | :heavy_check_mark: |
