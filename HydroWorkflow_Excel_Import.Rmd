@@ -1,7 +1,7 @@
 ---
 title: "Medsal Project: Analysis of hydrochemical data for the study site Samos"
-author: Dimistris Bassukas 
-date: 4/2021
+author:  
+date:
 geometry: margin=2cm
 documentclass: "report"
 output:
@@ -15,14 +15,11 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(message = FALSE)
 ```
 
-
-
 ```{r Install packages, eval=FALSE, include=FALSE}
 #Install packages ( only needed when using the script for the first time!)
 install.packages(c("readxl","PeriodicTable","knitr","ggplot2", "ggmap","plotly","factoextra","tibble","cluster","purr","tidyr", "magrittr", "scales","reshape2","directlabels", "dplyr", "hydrogeo", "ggrepel","readxl","ggplot2", "knitr","PeriodicTable","RMySQL","devtools", "latex2exp","devtools", "ggforce","kableExtra"))
 
 devtools::install_github("kassambara/ggpubr")
-devtools::install_github("paleolimbot/tidyphreeqc")
 ```
 
 ```{r Working directory, include=FALSE}
@@ -43,7 +40,7 @@ setwd(wd)
 #1) Provide the path to the .xlsx file containing your analyses  _________________________________________#                                 
 library(readxl)
 water_analysis <-
-    read_excel("Hydroworkflow_Input/Application_Samos_water_analyses_with_WK024_25.xlsx")
+    read_excel("Example.xlsx")
 
 #2)Clustering
 
@@ -150,7 +147,7 @@ kable(analysis_CBE[, c(1, ncol(analysis_CBE))], align = 'c',
       caption = 'Water samples and their respective CBE(%)')
 ```
 
-Systematic errors in the sampling procedure and the overall number of suitable or not samples, were evaluated by plotting the distribution of the CBE error.
+Systematic errors in the sampling procedure and the overall number of suitable or not samples, can be evaluated by plotting the distribution of the CBE error.
 
 ```{r Distribution of the CBE error,fig.cap="Distribution of CBE", echo=TRUE, fig.height=2, fig.width=8, message=FALSE, warning=FALSE}
 
@@ -192,7 +189,7 @@ Samples with a charge imbalance up to ±5%, as indicated by the CBE, are accepte
 water_analysis = analysis_CBE[abs(analysis_CBE$CBE) < 5,]
 ```
 
-The filtered dataset is retransformed from $mg/L$ to $meq/L$
+The filtered dataset is transformed from $mg/L$ to $meq/L$
 
 ```{r Recalculate meq/L for the filtered dataset, echo=TRUE, message=FALSE, warning=FALSE}
 library("PeriodicTable")
@@ -225,7 +222,7 @@ if("CO3" %in% colnames(water_analysis)) {
 
 ```
 
-The amount of TDS ( Total dissolved ions) in the water samples was computed and added to the dataset.
+The amount of TDS ( Total dissolved ions) in the water samples can be computed and added to the dataset.
 
 ```{r Theoretical computation of TDS, echo=TRUE}
 
@@ -254,11 +251,9 @@ rm(list=c("anions","cations","analysis_CBE","C_B_E","analysis_CBE","Large_imbala
 
 # 2. Cluster analysis
 
-Scope of the cluster analysis is the partition of water samples into clusters (groups) based on similarity, without prior knowledge of groupings between them. Preparation of the dataset to be clustered include:
-
 ## 2.1. Data preparation
 
-log-transforming highly skewed variables and standardization to 0 mean and 1 sd ( z-scoring).
+The variables upon which the clustering will be performed are chosen.
 
 ```{r Create data subset to perform cluster analysis, echo=TRUE, message=FALSE, warning=FALSE}
 library(dplyr)
@@ -288,7 +283,7 @@ if("CO3" %in% colnames(water_analysis)) {
 }
 ```
 
-The skewness of the samples was examined by plotting the distribution of the ions.
+The skewness of the samples is examined by plotting the distribution of the ions.
 
 ```{r Examine the skewness, echo=TRUE, fig.height=4, fig.width=8, fig.cap= "Distribution of ions prior to normalization"}
 library(dplyr)
@@ -329,7 +324,7 @@ water_analysis_clust %>%
 
 ```
 
-To ensure a common scale for all variables, the final data preparation step included the scaling of the samples substituting each value with a respective Z-score. After scaling, the mean is set to 0 and the distance from the mean is in units of 1 standard deviation:
+To ensure a common scale for all variables, the final data preparation step includes the scaling of the samples substituting each value with a respective Z-score. After scaling, the mean is set to 0 and the distance from the mean is in units of 1 standard deviation:
 
 $$
 z = \frac{x - \bar{x}}{\sigma}
@@ -357,6 +352,8 @@ kable(water_analysis_clust_scaled,align = 'c',  caption = 'Scaled data Z-scores'
 
 After having scaled the dataset we can now calculate the dissimilarity matrix (the distance $\delta_{i,j}$ between each pair of observations). Here the **Manhattan** or **City Block Distance (CDB)** was used as a measure of similarity . Other similarity measures can be used substituting the `method =` parameter with `“euclidean”, “maximum”, “canberra”, “binary”, “minkowski”` respectively. In this matrix, the value represent the distance between objects. The values on the diagonal of the matrix represent the distance between objects and themselves (which are zero). We can perform agglomerative HC with `hclust` specify the agglomeration method to be used (i.e. "complete", "average", "single", "ward.D"). We can then plot the dendrogram.
 
+Notice that the measure of similarity and agglomeration method are already defined. You may change them again below to cancel the initial instructions.
+
 ```{r HCA, echo=TRUE, fig.cap= " Cluster Dendrogram (ward.D agglomeration method)"}
 
 # Measure of similarity (method = " ")
@@ -381,7 +378,7 @@ fviz_nbclust(water_analysis_clust_scaled, FUN = hcut, method = "wss")
 
 ## 3.3.1. Dendrogram based on chosen number of clusters
 
-Based on the number of clusters chosen the previous dendrogram is respectively colored to portray the clustering:
+Based on the number of clusters chosen the previous dendrogram is respectively colored to portray the clustering. Again the number of k mean clusters were defined however, you may change them again below to cancel the initial instructions.
 
 ```{r cut the dendrogram, echo=TRUE, fig.height=8, fig.cap=" Dendrogram with the defined number of clusters indicated by the respective colors"}
 
@@ -412,7 +409,7 @@ water_analysis= cbind(water_analysis, Cluster = clusterCut )
 
 The spatial context of the clustering process was visualized:
 
-```{r create map, echo=FALSE, fig.height=8, fig.width=10, message=FALSE, warning=FALSE, fig.cap=" Map of the study area with the respective clusters as calculated in the previous section"}
+```{r create map, echo=FALSE, fig.cap=", fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
 library(ggmap)
 library(ggrepel)
 
@@ -425,7 +422,7 @@ map_data$CLUSTERS = factor(map_data$CLUSTERS)
 myMap <- get_stamenmap(bbox = map_cor,
                        maptype = "terrain", 
                        crop = TRUE,
-                       zoom = 12)
+                       zoom = calc_zoom(LON, LAT, map_data))
 
  map=ggmap(myMap, darken=c(0.05, "white"), extent="device") + 
   geom_point(aes(x=LON, y=LAT, color=CLUSTERS), data=map_data, size= 3, alpha = 0.8)+
@@ -452,6 +449,8 @@ rm(list=c("res.hc","hc1","water_analysis_clust","water_analysis_clust_scaled","m
 # 3. Data visualization
 
 ## 3.1. Piper plot
+
+The code for the piper diagram is from [<https://github.com/markolipka/ggplot_Piper>](https://github.com/markolipka/ggplot_Piper)
 
 ```{r Functions for piper plot, include=FALSE}
 
@@ -622,13 +621,6 @@ piper_labels = as.character(piper_data$observation)
 piper_data$label = piper_labels
 rm(piper_labels)
 
-##### Only samples
-
-#piper_1 = ggplot_piper() + geom_point(aes(x,y,colour=factor(observation), size = 0.05, alpha= .5), data=piper_data) + 
-  #labs(color = "Water samples") + theme(legend.position="bottom")+geom_text_repel(data =piper_data, aes(x, y, label = label), size = 2, max.overlaps = 30)
-
-#piper_1
-
 #### Samples, TDS, Clusters
 
 piper_2 = ggplot_piper() + geom_point(aes(x,y,colour=factor(Cluster), size = TDS), data=piper_data) + 
@@ -670,7 +662,7 @@ milliequivalents_shoeller= milliequivalents%>%
 ### Copy the Ions (not Samples, Cluster, TDS) and place assign them as character (e.g. "Na", "cl" ) to the idmeasure.vars variable as instructed in the next chunk! 
 ```
 
-Plot the shoeller
+Plot the Shoeller plot
 
 ```{r Schoeller Diagram, echo=FALSE, fig.height=12, fig.width=10, warning=FALSE, fig.cap=" Shoeller plot of the hydrochemical data from Samos" }
 
@@ -706,6 +698,8 @@ ggsave(file= "Shoeller_all.svg", shoeller_plot , width=10, height=12)
 shoeller_plot  
 ```
 
+The mean value for every variable in each cluster is calculated and plotted again in a Shoeller diagram.
+
 ```{r Mean value for each cluster and mean shoeller plot, echo=FALSE, fig.cap="Shoeller plot presenting the *average* concentration of each cluster", fig.height=7, message=FALSE, warning=FALSE}
 
 library(knitr)
@@ -737,6 +731,8 @@ ggsave(file="Shoeller_cluster_average.svg", shoeller_avg , width=8, height=5)
 
 shoeller_avg
 ```
+
+The variables plotted in the Shoeller plots can be summarized in boxplots.
 
 ```{r Summarizing boxplots, echo=FALSE, fig.height=6, fig.cap= " Boxplots of the clusters"}
 
@@ -1015,7 +1011,7 @@ library(scales)
 if("d18O" %in% colnames(water_analysis)) {
 o18_to_cl = ggplot(data = water_analysis) +
   geom_point(aes(
-    x = log(Cl),y =d18O,stroke = 0.1,color = as.factor(Cluster)), alpha = 0.6) +
+    x = log(milliequivalents$Cl),y =d18O,stroke = 0.1,color = as.factor(Cluster)), alpha = 0.6) +
   ylab(expression(paste(delta ^ {18}, "O(‰, V-SMOW)"))) +
   xlab(TeX(r'($log(Cl ^{-})\;meq/L$)'))+ 
   theme_light() +
@@ -1041,7 +1037,7 @@ library(scales)
 if("D_Excess" %in% colnames(water_analysis)) {
 de_to_cl = ggplot(data = water_analysis) +
   geom_point(aes(
-    x = log(Cl),y = D_Excess,stroke = 0.1,color = as.factor(Cluster)), alpha = 0.6) +
+    x = log(milliequivalents$Cl),y = D_Excess,stroke = 0.1,color = as.factor(Cluster)), alpha = 0.6) +
   ylab(expression(paste("DE(‰)"))) +
   xlab(TeX(r'($log(Cl ^{-})\;meq/L$)'))+ 
   theme_light() +
@@ -1059,5 +1055,3 @@ if(exists("de_to_cl")){
   }
 
 ```
-
-
