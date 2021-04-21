@@ -48,9 +48,8 @@ At the time being, two different workflows exist based on the type of input data
 
 Other variables that can be included and are by default incorporated in the script are:
 
-|     |      |          |     |    |     |
-|-----|------|----------|-----|----|-----|
 | d2H | d18O | D_Excess | NO3 | Br | CO3 |
+|-----|------|----------|-----|----|-----|
 
 Deuterium, d18O and Deuterium excess should be provided together!
 
