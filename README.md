@@ -21,6 +21,8 @@ At the time being, two different workflows exist based on the type of input data
 
 Code from: <https://github.com/markolipka/ggplot_Piper>
 
+
+
 ### .xlsx data input
 
 1) Create an .xlsx containing your water analyses. For the script to run the following variables must be provided with the exact column names shown below ( The column order is irrelevant). *Longitude and Latitude in Decimal Degrees - WGS 84, ions in mg/L and isotopic data in per mil.*
@@ -30,24 +32,29 @@ Code from: <https://github.com/markolipka/ggplot_Piper>
 | Sample | Latitude | Longitude | Cl  | HCO3 | SO4 | Ca  | Mg  | Na  | K   |
 
 Other variables that can be included and are by default incorporated in the script are:
-
-------------------------------------
+|     |       |          |     |    |     |
+|-----|-------|----------|-----|----|-----|
 | d2H | d18O  | D_Excess | NO3 | Br | CO3 |
-------------------------------------
 
-$ \delta^2H, \delta^{18}O$ and $D-Excess$ should be provided together!
+
+Deuterium, delta should be provided together!
 
 2) Find the **r Provide the instructions for your run** chunk
 
 -   Provide the path to the .xlsx containing your data to the
 
-    *water_analysis <- read_excel( ''C/./your_data.xlsx'')*
+
+     water_analysis <- read_excel( ''C/./your_data.xlsx'')
+
 
 -   Choose the clustering parameters and the number of clusters
 
 -   Specify map corners. The two map corners represent the coordinates of the upper left and lower right points of a rectangle covering the your study area.
 
 3)  Knit!
+
+
+
 
 ### MedSal database input
 
