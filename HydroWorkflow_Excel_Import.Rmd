@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(message = FALSE)
 ```
 
-Just testing this out!
+
 
 ```{r Install packages, eval=FALSE, include=FALSE}
 #Install packages ( only needed when using the script for the first time!)
@@ -31,7 +31,7 @@ wd = getwd()
 setwd(wd)
 ```
 
-```{r Provide the instructions to run the script, message=FALSE, warning=FALSE, include=FALSE}
+```{r Provide the instructions for your run, message=FALSE, warning=FALSE, include=FALSE}
 
 #▐▓█▀▀▀▀▀▀▀▀▀█▓▌░▄▄▄▄▄░
 #▐▓█░░▀░░▀▄░░█▓▌░█▄▄▄█░
@@ -58,10 +58,10 @@ numberofclusters = 4
 
 #3)Specify map corners
 map_cor = c(
-  top =    37.789129,
-  left =   26.798606,
-  bottom =   37.655869,
-  right = 27.037566
+  top =    37.789129, # Latitude of the upper left corner
+  left =   26.798606, # Longitude of the upper left corner
+  bottom =   37.655869, # Latitude of the lower right corner
+  right = 27.037566  # Longitude of the lower right corner
   )
 
 #___________________________________________YOU CAN NOW KNIT THE DOCUMENT_________# 
