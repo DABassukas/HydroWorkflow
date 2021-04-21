@@ -40,9 +40,8 @@ At the time being, two different workflows exist based on the type of input data
 
 
 
-|        |          |           |    |      |     |    |    |    |   |    
-|--------|----------|-----------|----|------|-----|----|----|----|---|
 | Sample | Latitude | Longitude | Cl | HCO3 | SO4 | Ca | Mg | Na | K |
+|--------|----------|-----------|----|------|-----|----|----|----|---|
 
 
 
