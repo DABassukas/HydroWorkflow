@@ -1,5 +1,7 @@
 # Clustering water samples based on main anions and cations
 
+![MedSAL](https://medsal.eu/wp-content/uploads/2019/10/cropped-Logo.png)
+
 This project provides the basis in order to perform a reproducible clustering on water samples which can facilitate the detection of hydrochemical End-members . It has been created in the framework of the [MedSal project](https://medsal.eu/).
 
 It currently includes following steps:
