@@ -18,20 +18,20 @@ At the time being, two different workflows exist based on the type of input data
 
 
 
-|                         | .xlsx              | database           |
-|-------------------------|--------------------|--------------------|
-|__Data quality assessment__ |                    |                    |
-| Charge balance error    | :heavy_check_mark: | :heavy_check_mark: |
-|__Cluster analysis__     |                    |                    |
-| Data preparation        | :heavy_check_mark: | :heavy_check_mark: |
-| Clustering              | :heavy_check_mark: | :heavy_check_mark: |
-| Dendrogram              | :heavy_check_mark: | :heavy_check_mark: |
-| Cluster map             | :heavy_check_mark: |       :x:          |
-|__Data visualization__   |                    |                    |
-| Piper plot**            | :heavy_check_mark: | :heavy_check_mark: |
-| Shoeller plot           | :heavy_check_mark: | :heavy_check_mark: |
-| Ion ratios              | :heavy_check_mark: | :heavy_check_mark: |
-| Isotope data            | :heavy_check_mark: | :heavy_check_mark:  |
+|                         | .xlsx              | 
+|-------------------------|--------------------|
+|__Data quality assessment__ |                 |
+| Charge balance error    | :heavy_check_mark: | 
+|__Cluster analysis__     |                    |   
+| Data preparation        | :heavy_check_mark: | 
+| Clustering              | :heavy_check_mark: | 
+| Dendrogram              | :heavy_check_mark: | 
+| Cluster map             | :heavy_check_mark: | 
+|__Data visualization__   |                    | 
+| Piper plot**            | :heavy_check_mark: | 
+| Shoeller plot           | :heavy_check_mark: | 
+| Ion ratios              | :heavy_check_mark: | 
+| Isotope data            | :heavy_check_mark: | 
 
 **Code from: <https://github.com/markolipka/ggplot_Piper>
 
@@ -69,23 +69,3 @@ At the time being, two different workflows exist based on the type of input data
 -   Specify map corners. The two map corners represent the coordinates of the upper left and lower right points of a rectangle covering the your study area.
 
 3) Knit!
-
-
-
-### MedSal database input
-
-1) Find the **r Provide the instructions for your run** chunk
-
--   Choose the area you want to examine by providing the Medsal Code
-
-    medsalgeochem = subset(medsalgeochem,MedsalCode==**"RHO"**)
-
--   Choose the period of interest ( always in yyyy-mm-dd format)
-
-    Ex: After 2020-01-01 medsalgeochem = subset(medsalgeochem,date \>= "2020-01-01")
-
-    Ex: From 2000-01-01 to 2010-01-01 .., date \>= "2000-01-01" & date =\< "2010-01-01"
-
--   Choose the clustering parameters and the number of clusters
-
-2) Knit!
