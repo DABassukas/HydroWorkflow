@@ -14,7 +14,7 @@ It currently includes following steps:
 
 -   Step 4: Data visualization
 
-At the time being, two different workflows exist based on the type of input data. Input data are either excel/csv files that get imported or through direct access to the [MedSal Database](https://www.uhydro.de/medsaldba). Differences regarding the features are summarized in the table below:
+Input data are either excel/csv files that get imported.
 
 
 
