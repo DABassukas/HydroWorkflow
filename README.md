@@ -66,6 +66,6 @@ Input data are either excel/csv files that get imported.
 
 -   Choose the clustering parameters and the number of clusters
 
--   Specify map corners. The two map corners represent the coordinates of the upper left and lower right points of a rectangle covering the your study area.
+-   Specify EPSG Coordinate Reference System. 
 
 3) Knit!
