@@ -5,9 +5,9 @@ date:
 geometry: margin=2cm
 documentclass: "report"
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -53,15 +53,8 @@ agg_method =  "ward.D"
 # Choose the number of clusters for the dendrogram 
 numberofclusters = 4
 
-#3)Specify map corners
-map_cor = c(
-  top =    37.789129, # Latitude of the upper left corner
-  left =   26.798606, # Longitude of the upper left corner
-  bottom =   37.655869, # Latitude of the lower right corner
-  right = 27.037566  # Longitude of the lower right corner
-  )
-
-#___________________________________________YOU CAN NOW KNIT THE DOCUMENT_________# 
+#3)Specify coordinate system
+CRS = 4326
 ```
 
 # 1.Data quality assessment
@@ -398,7 +391,7 @@ dendro
 
 Each sample's respective cluster value is added as a column in `water_analysis` dataframe.
 
-```{r add clusters to data, eval=FALSE, include=FALSE}
+```{r add clusters to data, include=FALSE}
 
 clusterCut <- cutree(hc1,numberofclusters) 
 
@@ -410,28 +403,26 @@ water_analysis= cbind(water_analysis, Cluster = clusterCut )
 The spatial context of the clustering process was visualized:
 
 ```{r create map, echo=FALSE,  fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
-library(ggmap)
-library(ggrepel)
-
-map_data = data.frame(SAMPLES = water_analysis$Sample,
-                      LON = water_analysis$Longitude,
-                      LAT = water_analysis$Latitude,
-                      CLUSTERS = water_analysis$Cluster)
-map_data$CLUSTERS = factor(map_data$CLUSTERS)
-
-myMap <- get_stamenmap(bbox = map_cor,
-                       maptype = "terrain", 
-                       crop = TRUE,
-                       zoom = calc_zoom(LON, LAT, map_data))
-
- map=ggmap(myMap, darken=c(0.05, "white"), extent="device") + 
-  geom_point(aes(x=LON, y=LAT, color=CLUSTERS), data=map_data, size= 3, alpha = 0.8)+
-  geom_text_repel(data = map_data, aes(x = LON, y = LAT, label = SAMPLES), size = 3)+
-  theme(legend.position="bottom")
  
- map
+ library(sf)
+ library(ggspatial)
  
- ggsave(file="Cluster_map.png", map)
+ # Transform data to sf (simple feature)
+water_analysis <-  st_as_sf(
+  water_analysis,
+  coords = c("X", "Y"),
+  crs = CRS,
+  remove = FALSE
+)
+
+study_site_map <- ggplot() +
+  annotation_map_tile() +
+  geom_sf(data = water_analysis, aes(col = as.factor(water_analysis$Cluster)), alpha = 0.8) +
+  theme_minimal(base_size = 8) +
+  theme(legend.position = "bottom") +
+  labs(colour = "Cluster", title = "Study area")
+
+study_site_map
 ```
 
 ```{r Export water_analysis with clusters for GIS, include=FALSE}
