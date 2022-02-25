@@ -1,13 +1,14 @@
 ---
 title: "hydrochem_clustering_Excel"
-author:  
-date:
-geometry: margin=2cm
-documentclass: "report"
+author: "null"
+date: "null"
 output:
+  word_document: default
+  pdf_document: default
   html_document:
     df_print: paged
-  pdf_document: default
+documentclass: report
+geometry: margin=2cm
 ---
 
 ```{r setup, include=FALSE}
@@ -55,6 +56,33 @@ numberofclusters = 4
 
 #3)Specify coordinate system
 CRS = 4326
+```
+
+```{r Combine names and dates for unique sample ID }
+
+if("Date(d/m/y)" %in% colnames(water_analysis)) {
+
+  library(tidyverse)
+  
+  water_analysis <- water_analysis %>%
+  unite("Sample", Sample:`Date(d/m/y)`, remove = TRUE)}
+ 
+
+# Delete rows that contain no data
+library(tidyr)
+water_analysis <- water_analysis |>
+  filter(Na > 0,
+         Mg > 0,
+         K > 0,
+         Ca > 0 ,
+         Cl > 0,
+         HCO3 > 0,
+         SO4 > 0)
+
+# Detect duplicates 
+n_occur <- data.frame(table(water_analysis$Sample))
+n_occur[n_occur$Freq > 1,]
+
 ```
 
 # 1.Data quality assessment
