@@ -237,7 +237,7 @@ if("CO3" %in% colnames(water_analysis)) {
 ```{r First Housekeeping, include=FALSE}
 
 # Housekeeping! 
-rm(list=c("anions","cations","analysis_CBE","C_B_E","analysis_CBE","Large_imbalance","plot1_density"))
+rm(list=c("anions","cations","analysis_CBE","C_B_E","Large_imbalance","plot1_density"))
 ```
 
 ------------------------------------------------------------------------
@@ -360,7 +360,7 @@ plot(hc1, cex = 0.6, hang = -1)
 
 For determining an optimal number of clusters the results of the Elbow method are presented below:
 
-```{r cluster optimal number, echo=TRUE, fig.height=3, fig.width=8, fig.cap=""}
+```{r cluster optimal number, eval=FALSE, fig.cap="", fig.height=3, fig.width=8, include=FALSE}
 
 library(factoextra)
 
@@ -381,7 +381,7 @@ library(factoextra)
 # If you want to change the number of clusters activate the assignment below by deleting the "#" below
 # numberofclusters = 1 
 
-dendro= fviz_dend(hc1, cex = 0.5, k = numberofclusters, horiz = T,main = "Samos dendrogram (Ward's method)",
+dendro= fviz_dend(hc1, cex = 0.5, k = numberofclusters, horiz = T,main = "",
           xlab = "", ylab = "Distance", color_labels_by_k = T, palette =  "aaas")
 
 ggsave(file="Dendrogram.svg", dendro, width=10, height=8)
@@ -403,26 +403,23 @@ water_analysis= cbind(water_analysis, Cluster = clusterCut )
 The spatial context of the clustering process was visualized:
 
 ```{r create map, echo=FALSE,  fig.height=8, fig.width=10, message=FALSE, warning=FALSE}
- 
- library(sf)
- library(ggspatial)
+
+library(ggplot2) 
+library(sf)
+library(ggspatial)
+
  
  # Transform data to sf (simple feature)
 water_analysis <-  st_as_sf(
   water_analysis,
-  coords = c("X", "Y"),
+  coords = c("Y", "X"),
   crs = CRS,
-  remove = FALSE
-)
+  remove = FALSE)
 
-study_site_map <- ggplot() +
-  annotation_map_tile() +
-  geom_sf(data = water_analysis, aes(col = as.factor(water_analysis$Cluster)), alpha = 0.8) +
-  theme_minimal(base_size = 8) +
-  theme(legend.position = "bottom") +
+ggplot(data = water_analysis) +
+  annotation_map_tile(zoomin = -1) +
+  geom_sf(aes(color = as.factor(Cluster)))+
   labs(colour = "Cluster", title = "Study area")
-
-study_site_map
 ```
 
 ```{r Export water_analysis with clusters for GIS, include=FALSE}
@@ -434,7 +431,7 @@ write.csv( water_analysis,  paste(gispath, collapse = ""), row.names = FALSE)
 ```
 
 ```{r second Housekeeping, include=FALSE}
-rm(list=c("res.hc","hc1","water_analysis_clust","water_analysis_clust_scaled","map_data","myMap","numberofclusters","clusterCut","d"))
+rm(list=c("hc1","water_analysis_clust","water_analysis_clust_scaled","numberofclusters","clusterCut","d"))
 ```
 
 # 3. Data visualization
