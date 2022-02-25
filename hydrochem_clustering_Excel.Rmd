@@ -412,7 +412,7 @@ library(ggspatial)
  # Transform data to sf (simple feature)
 water_analysis <-  st_as_sf(
   water_analysis,
-  coords = c("Y", "X"),
+  coords = c("X", "Y"),
   crs = CRS,
   remove = FALSE)
 
